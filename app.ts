@@ -5,53 +5,29 @@ import * as dayjs from 'dayjs';
 
 // ts-node app.ts [startdate] [enddate]
 
+type DayType = 'Weekday'|'Everyday'|'Holiday'|'Sun'|'Mon'|'Thu'|'Wed'|'Thu'|'Fri'|'Sat'
+type HabitConfig = {
+  identifier: string;
+  name: string;
+  relation: DayType[]
+}
+
 const notion = new Client({
   auth: process.env.NOTION_TOKEN
 });
 
-
-// const habits = [
-//   {name: '平日ステッパー', relation: 'Weekday'},
-//   {name: 'プランク60秒', relation: 'Everyday'},
-// ];
-
-const trackerPropertiesBase = {
-      name: {
-        title: {}
-      },
-      date: {
-        date: {}
-      },
-      dayOfTheWeek: {
-        select: {
-          options: [
-            {name: 'Sun', color: "red"},
-            {name: 'Mon', color: "green"},
-            {name: 'Thu', color: "yellow"},
-            {name: 'Wed', color: "brown"},
-            {name: 'Thu', color: "purple"},
-            {name: 'Fri', color: "pink"},
-            {name: 'Sat', color: "blue"}
-          ]
-        }
-      },
-      day: {
-        select: {
-          options: [
-            {name: 'Weekday', color: "orange"},
-            {name: 'Holiday', color: "blue"}
-          ]
-        }
-      }
-    };
-// const trackerDatabaseParameter = (args: any):CreateDatabaseParameters => {
-  // base
-  // オプショナルを設定
-// }
+const habits: HabitConfig[] = [
+  {identifier: 'stepper', name: '平日ステッパー10分踏む', relation: ['Weekday']},
+  {identifier: 'plank',   name: '毎日プランク60秒', relation: ['Everyday']},
+];
 
 const createTrackerDatabase = async(pageId: string) => {
+  const additionalProperties = habits.reduce((props, habit) => {
+    return {...props, ...{[habit.name]: { checkbox: {}, type: 'checkbox'}}}
+  }, {});
+
   const database = await notion.databases.create({
-    title: [{text: {content: 'sample database From Notion JavaScript Client'}}],
+    title: [{text: {content: 'Habit Track'}}],
     parent: {
       type: "page_id",
       page_id: pageId
@@ -88,16 +64,13 @@ const createTrackerDatabase = async(pageId: string) => {
         formula: {
           expression: "prop(\"date\") < now()"
         }
-      }
+      },
+      ...additionalProperties
     }
   });
   console.log(database);
 
   return database;
-}
-
-const trackerRecordsParams = () => {
-
 }
 
 const insertTrackerRecords = (notion: Client, database: CreateDatabaseResponse, start: string, end: string) => {
@@ -152,23 +125,48 @@ const insertTrackerRecords = (notion: Client, database: CreateDatabaseResponse, 
     }
   });
 
+  const records = [];
   for (const params of recordParams) {
-    notion.pages.create(params)
+    records.push(notion.pages.create(params));
   }
 
-  console.log(recordParams);
-
-  console.log(holidays);
+  return records;
 }
 
-const achieveDatabaseParameter = () => {
-  //base
-  // オプショナルを設定
-}
+const createAchieveDatabase = async(pageId: string, tracker: CreateDatabaseResponse) => {
+  const additionalProperties = habits.reduce((props, habit) => {
+    return {...props, ...{[habit.name]: { checkbox: {}, type: 'checkbox'}}}
+  }, {});
 
+  const database = await notion.databases.create({
+    title: [{text: {content: 'Habit Track(Achieve)'}}],
+    parent: {
+      type: "page_id",
+      page_id: pageId
+    },
+    properties: {
+      name: {
+        title: {}
+      },
+      achieve: {
+        formula: {
+          expression: "prop(\"date\") < now()"
+        }
+      },
+      achieveByToday: {
+        formula: {
+          expression: "prop(\"date\") < now()"
+        }
+      },
+      ...additionalProperties
+    }
+  });
+  console.log(database);
+
+  return database;
+}
 
 const insertAchieveRecords = () => {
-
 }
 
 const main = async(startDate, endDate) => {
@@ -180,7 +178,10 @@ const main = async(startDate, endDate) => {
   }
 
   const tracker = await createTrackerDatabase(pageId);
-  insertTrackerRecords(notion, tracker, startDate, endDate);
+  const trackerRecords = insertTrackerRecords(notion, tracker, startDate, endDate);
+
+  const achieve = await createAchieveDatabase(pageId, tracker);
+  // insertAchieveRecords()
 }
 
 

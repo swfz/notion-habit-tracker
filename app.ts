@@ -134,8 +134,16 @@ const insertTrackerRecords = (notion: Client, database: CreateDatabaseResponse, 
 }
 
 const createAchieveDatabase = async(pageId: string, tracker: CreateDatabaseResponse) => {
+  // relation
+  // count
+  // rollup
+  // formula
+  const calcFields = (habit: HabitConfig) => {
+    return {}
+  }
+
   const additionalProperties = habits.reduce((props, habit) => {
-    return {...props, ...{[habit.name]: { checkbox: {}, type: 'checkbox'}}}
+    return {...props, ...calcFields(habit)}
   }, {});
 
   const database = await notion.databases.create({
@@ -150,12 +158,17 @@ const createAchieveDatabase = async(pageId: string, tracker: CreateDatabaseRespo
       },
       achieve: {
         formula: {
-          expression: "prop(\"date\") < now()"
+          expression: "now()"
         }
       },
       achieveByToday: {
         formula: {
-          expression: "prop(\"date\") < now()"
+          expression: "now()"
+        }
+      },
+      HabitTracks: {
+        relation: {
+          database_id: tracker.id
         }
       },
       ...additionalProperties

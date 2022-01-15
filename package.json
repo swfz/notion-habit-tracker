@@ -1,0 +1,20 @@
+{
+  "name": "notion-habit-tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@holiday-jp/holiday_jp": "^2.3.0",
+    "@notionhq/client": "^0.4.12",
+    "dayjs": "^1.10.7"
+  },
+  "devDependencies": {
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
+  }
+}

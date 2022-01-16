@@ -1,5 +1,5 @@
 import {Client, LogLevel } from "@notionhq/client";
-import { createDatabase, CreateDatabaseParameters,CreateDatabaseResponse, getDatabase } from "@notionhq/client/build/src/api-endpoints";
+import { createDatabase, CreateDatabaseParameters,CreateDatabaseResponse, getDatabase, CreatePageResponse} from "@notionhq/client/build/src/api-endpoints";
 import * as holidayJp from '@holiday-jp/holiday_jp';
 import * as dayjs from 'dayjs';
 
@@ -9,7 +9,7 @@ type DayType = 'Weekday'|'Everyday'|'Holiday'|'Sun'|'Mon'|'Thu'|'Wed'|'Thu'|'Fri
 type HabitConfig = {
   identifier: string;
   name: string;
-  relation: DayType[]
+  relationType: DayType[]
 }
 
 const notion = new Client({
@@ -18,8 +18,8 @@ const notion = new Client({
 });
 
 const habits: HabitConfig[] = [
-  {identifier: 'stepper', name: '平日ステッパー10分踏む', relation: ['Weekday']},
-  {identifier: 'plank',   name: '毎日プランク60秒', relation: ['Everyday']},
+  {identifier: 'stepper', name: '平日ステッパー10分踏む', relationType: ['Weekday']},
+  {identifier: 'plank',   name: '毎日プランク60秒', relationType: ['Everyday']},
 ];
 
 const createTrackerDatabase = async(pageId: string) => {
@@ -74,8 +74,7 @@ const createTrackerDatabase = async(pageId: string) => {
   return database;
 }
 
-const insertTrackerRecords = async(notion: Client, database: CreateDatabaseResponse, start: string, end: string) => {
-
+const insertTrackerRecords = async(database: CreateDatabaseResponse, start: string, end: string) => {
   const startDate = dayjs(start)
   const endDate = dayjs(end)
   const days = endDate.diff(start, 'day');
@@ -208,7 +207,56 @@ const createAchieveDatabase = async(pageId: string, tracker: CreateDatabaseRespo
   return database;
 }
 
-const insertAchieveRecords = () => {
+const insertAchieveRecords = async(database: CreateDatabaseResponse, trackerRecords: CreatePageResponse[]) => {
+  console.log('tracker recoreds------------------------------------');
+  console.log(trackerRecords);
+  console.log('tracker recoreds------------------------------------');
+
+  const recordParams = habits.map(habit => {
+    const relationRecords = habit.relationType.includes('Everyday')
+      ? trackerRecords
+      : trackerRecords.filter(r => {
+        console.log(r);
+        return habit.relationType.some(dayType => {
+          if (['Weekday', 'Holiday'].includes(dayType)) {
+            return r.properties.day.select.name === dayType
+          }
+          else {
+            // 暫定
+            return false;
+          }
+        });
+    });
+
+    const relationIds = relationRecords.map(r => ({id: r.id}));
+
+    console.log('relation ids ------------------------------------');
+    console.log(relationIds);
+
+    return {
+      parent: {
+        database_id: database.id,
+      },
+      properties: {
+        name: {
+          title: [{text: {content: habit.name}}]
+        },
+        HabitTracks: {
+          relation: relationIds
+        }
+      }
+    }
+  });
+
+  const records = [];
+  for (const params of recordParams) {
+    console.log('params -- - - - - - - -- - -');
+    console.log(params);
+    const record = await notion.pages.create(params);
+    records.push(record);
+  }
+
+  return records;
 }
 
 const main = async(startDate, endDate) => {
@@ -220,10 +268,10 @@ const main = async(startDate, endDate) => {
   }
 
   const tracker = await createTrackerDatabase(pageId);
-  const trackerRecords = await insertTrackerRecords(notion, tracker, startDate, endDate);
+  const trackerRecords = await insertTrackerRecords(tracker, startDate, endDate);
 
   const achieve = await createAchieveDatabase(pageId, tracker);
-  // insertAchieveRecords()
+  const achieveRecords = await insertAchieveRecords(achieve, trackerRecords);
 }
 
 

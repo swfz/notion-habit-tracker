@@ -1,4 +1,4 @@
-import {Client, } from "@notionhq/client";
+import {Client, LogLevel } from "@notionhq/client";
 import { createDatabase, CreateDatabaseParameters,CreateDatabaseResponse, getDatabase } from "@notionhq/client/build/src/api-endpoints";
 import * as holidayJp from '@holiday-jp/holiday_jp';
 import * as dayjs from 'dayjs';
@@ -13,6 +13,7 @@ type HabitConfig = {
 }
 
 const notion = new Client({
+  logLevel: LogLevel.DEBUG,
   auth: process.env.NOTION_TOKEN
 });
 
@@ -73,7 +74,7 @@ const createTrackerDatabase = async(pageId: string) => {
   return database;
 }
 
-const insertTrackerRecords = (notion: Client, database: CreateDatabaseResponse, start: string, end: string) => {
+const insertTrackerRecords = async(notion: Client, database: CreateDatabaseResponse, start: string, end: string) => {
 
   const startDate = dayjs(start)
   const endDate = dayjs(end)
@@ -127,7 +128,8 @@ const insertTrackerRecords = (notion: Client, database: CreateDatabaseResponse, 
 
   const records = [];
   for (const params of recordParams) {
-    records.push(notion.pages.create(params));
+    const record = await notion.pages.create(params);
+    records.push(record);
   }
 
   return records;
@@ -139,7 +141,27 @@ const createAchieveDatabase = async(pageId: string, tracker: CreateDatabaseRespo
   // rollup
   // formula
   const calcFields = (habit: HabitConfig) => {
-    return {}
+    return {
+      [`checked-${habit.identifier}`]: {
+        rollup: {
+          rollup_property_name: habit.name,
+          relation_property_name: 'HabitTracks',
+          function: 'checked'
+        }
+      },
+      [`result-${habit.identifier}`]: {
+        rollup: {
+          rollup_property_name: habit.name,
+          relation_property_name: 'HabitTracks',
+          function: 'percent_checked'
+        }
+      },
+      // [`result-by-day-${habit.identifier}`]: {
+      //   formula: {
+      //     expression: `prop("checked-${habit.identifier}") / prop("past-days")`
+      //   }
+      // }
+    }
   }
 
   const additionalProperties = habits.reduce((props, habit) => {
@@ -171,6 +193,13 @@ const createAchieveDatabase = async(pageId: string, tracker: CreateDatabaseRespo
           database_id: tracker.id
         }
       },
+      'past-days': {
+        rollup: {
+          rollup_property_name: 'past',
+          relation_property_name: 'HabitTracks',
+          function: 'checked'
+        }
+      },
       ...additionalProperties
     }
   });
@@ -191,7 +220,7 @@ const main = async(startDate, endDate) => {
   }
 
   const tracker = await createTrackerDatabase(pageId);
-  const trackerRecords = insertTrackerRecords(notion, tracker, startDate, endDate);
+  const trackerRecords = await insertTrackerRecords(notion, tracker, startDate, endDate);
 
   const achieve = await createAchieveDatabase(pageId, tracker);
   // insertAchieveRecords()

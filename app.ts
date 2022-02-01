@@ -155,11 +155,6 @@ const createAchieveDatabase = async(pageId: string, tracker: CreateDatabaseRespo
           function: 'percent_checked'
         }
       },
-      // [`result-by-day-${habit.identifier}`]: {
-      //   formula: {
-      //     expression: `prop("checked-${habit.identifier}") / prop("past-days")`
-      //   }
-      // }
     }
   }
 
@@ -205,6 +200,57 @@ const createAchieveDatabase = async(pageId: string, tracker: CreateDatabaseRespo
   console.log(database);
 
   return database;
+}
+
+const updateAchieveDatabase = async(database: CreateDatabaseResponse) => {
+  const calcFields = (habit: HabitConfig) => {
+    return {
+      [`result-by-day-${habit.identifier}`]: {
+        formula: {
+          expression: `prop("checked-${habit.identifier}") / prop("past-days")`
+        }
+      }
+    }
+  }
+
+  const additionalProperties = habits.reduce((props, habit) => {
+    return {...props, ...calcFields(habit)}
+  }, {});
+
+  const resultExpression = habits.reduce((exp, habit, i, arr) => {
+    if(i === 0) {
+      return `prop("result-${habit.identifier}")`
+    }
+    else {
+      return `if(contains(prop("name"), "${habit.name}"), prop("result-${habit.identifier}"), ${exp})`;
+    }
+  }, '');
+
+  const resultByDayExpression = habits.reduce((exp, habit, i, arr) => {
+    if(i === 0) {
+      return `prop("result-by-day-${habit.identifier}")`
+    }
+    else {
+      return `if(contains(prop("name"), "${habit.name}"), prop("result-by-day-${habit.identifier}"), ${exp})`;
+    }
+  }, '');
+
+  await notion.databases.update({
+    database_id: database.id,
+    properties: {
+      Result: {
+        formula: {
+          expression: resultExpression
+        }
+      },
+      ResultByDay: {
+        formula: {
+          expression: resultByDayExpression
+        }
+      },
+      ...additionalProperties
+    }
+  })
 }
 
 const insertAchieveRecords = async(database: CreateDatabaseResponse, trackerRecords: CreatePageResponse[]) => {
@@ -271,6 +317,7 @@ const main = async(startDate, endDate) => {
   const trackerRecords = await insertTrackerRecords(tracker, startDate, endDate);
 
   const achieve = await createAchieveDatabase(pageId, tracker);
+  await updateAchieveDatabase(achieve);
   const achieveRecords = await insertAchieveRecords(achieve, trackerRecords);
 }
 

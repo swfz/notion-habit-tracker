@@ -86,7 +86,7 @@ const createTrackerDatabase = async(pageId: string) => {
 const insertTrackerRecords = async(database: CreateDatabaseResponse, start: string, end: string) => {
   const startDate = dayjs(start)
   const endDate = dayjs(end)
-  const days = endDate.diff(start, 'day');
+  const days = endDate.diff(start, 'day') + 1;
   const holidays = holidayJp.between(new Date(start), new Date(end));
 
   const isHoliday = (holidays, date): boolean => {

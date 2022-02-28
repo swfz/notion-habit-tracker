@@ -261,13 +261,18 @@ const insertAchieveRecords = async(database: CreateDatabaseResponse, trackerReco
     const relationRecords = habit.relationType.includes('Everyday')
       ? trackerRecords
       : trackerRecords.filter(r => {
-        console.log(r);
+        // console.log(r);
         return habit.relationType.some(dayType => {
-          if (['Weekday', 'Holiday'].includes(dayType)) {
-            return r.properties.day.select.name === dayType
+          if('properties' in r && 'day' in r.properties && 'select' in r.properties.day) {
+            if (['Weekday', 'Holiday'].includes(dayType)) {
+              return r.properties.day.select.name === dayType
+            }
+            else {
+              // 暫定
+              return false;
+            }
           }
           else {
-            // 暫定
             return false;
           }
         });

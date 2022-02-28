@@ -237,6 +237,13 @@ const updateAchieveDatabase = async(database: CreateDatabaseResponse) => {
   await notion.databases.update({
     database_id: database.id,
     properties: {
+      ...additionalProperties
+    }
+  })
+
+  await notion.databases.update({
+    database_id: database.id,
+    properties: {
       Result: {
         formula: {
           expression: resultExpression
@@ -246,8 +253,7 @@ const updateAchieveDatabase = async(database: CreateDatabaseResponse) => {
         formula: {
           expression: resultByDayExpression
         }
-      },
-      ...additionalProperties
+      }
     }
   })
 }

@@ -1,5 +1,5 @@
 import {Client, LogLevel } from "@notionhq/client";
-import { createDatabase, CreateDatabaseParameters,CreateDatabaseResponse, getDatabase, CreatePageResponse} from "@notionhq/client/build/src/api-endpoints";
+import {CreateDatabaseResponse, CreatePageResponse} from "@notionhq/client/build/src/api-endpoints";
 import * as holidayJp from '@holiday-jp/holiday_jp';
 import * as dayjs from 'dayjs';
 

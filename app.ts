@@ -172,16 +172,6 @@ const createAchieveDatabase = async(pageId: string, tracker: CreateDatabaseRespo
       name: {
         title: {}
       },
-      achieve: {
-        formula: {
-          expression: "now()"
-        }
-      },
-      achieveByToday: {
-        formula: {
-          expression: "now()"
-        }
-      },
       HabitTracks: {
         relation: {
           database_id: tracker.id

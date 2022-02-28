@@ -5,6 +5,15 @@ import * as dayjs from 'dayjs';
 
 // ts-node app.ts [startdate] [enddate]
 
+if(process.env.NOTION_TOKEN === undefined) {
+  console.log('Please set NOTION_TOKEN');
+  process.exit(1);
+}
+if(process.env.NOTION_PAGE_ID === undefined) {
+  console.log('Please set NOTION_PAGE_ID');
+  process.exit(1);
+}
+
 type DayType = 'Weekday'|'Everyday'|'Holiday'|'Sun'|'Mon'|'Thu'|'Wed'|'Thu'|'Fri'|'Sat'
 type HabitConfig = {
   identifier: string;

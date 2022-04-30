@@ -1,0 +1,11 @@
+{
+  "habits": [
+    {"identifier": "stepper", "name": "平日ステッパー15分踏む", "relationType": ["Weekday"]},
+    {"identifier": "standing", "name": "平日スタンディングデスク3時間", "relationType": ["Weekday"]},
+    {"identifier": "plank", "name": "プランク60秒", "relationType": ["Everyday"]},
+    {"identifier": "korokoro", "name": "コロコロ30回", "relationType": ["Everyday"]},
+    {"identifier": "leglift", "name": "足上げ腹筋20回", "relationType": ["Everyday"]},
+    {"identifier": "tweet", "name": "1(Re)tweet/day", "relationType": ["Everyday"]},
+    {"identifier": "times", "name": "times1発言/day", "relationType": ["Everyday"]}
+  ]
+}

@@ -2,6 +2,7 @@ import {Client, LogLevel } from "@notionhq/client";
 import {CreateDatabaseResponse, CreatePageResponse} from "@notionhq/client/build/src/api-endpoints";
 import * as holidayJp from '@holiday-jp/holiday_jp';
 import * as dayjs from 'dayjs';
+import * as fs from 'fs';
 
 // ts-node app.ts [startdate] [enddate]
 
@@ -26,10 +27,7 @@ const notion = new Client({
   auth: process.env.NOTION_TOKEN
 });
 
-const habits: HabitConfig[] = [
-  {identifier: 'stepper', name: '平日ステッパー10分踏む', relationType: ['Weekday']},
-  {identifier: 'plank',   name: '毎日プランク60秒', relationType: ['Everyday']},
-];
+const habits: HabitConfig[] = JSON.parse(fs.readFileSync('config.json', 'utf-8')).habits;
 
 const createTrackerDatabase = async(pageId: string) => {
   const additionalProperties = habits.reduce((props, habit) => {

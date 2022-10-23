@@ -16,6 +16,14 @@ https://swfz.notion.site/2e74942314234651bc3a5eb53cac6b47
 }
 ```
 
+- 環境変数
+
+| environment | description |
+|:-|:-|
+| NOTION_TOKEN | NotionのAPIトークン |
+| NOTION_PAGE_ID | 生成したテーブルなどを追加するページのID |
+
+
 ```shell
 yarn ts-node app.ts 2022-01-01 2022-01-31
 ```
